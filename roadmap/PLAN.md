@@ -2,7 +2,7 @@
 
 > **PROGRESS TRACKING**: This is the master plan. Update sprint docs as you work.
 > Do NOT create separate status documents. Mark checkboxes in sprint files.
-> Last updated: 2026-10-13 by Codex — demo scope and narrative review
+> Last updated: 2026-10-13 by Claude (Beans-bot): Sprints 0–3 built; Sprint 7 rehearsal open
 
 ## Project Overview
 
@@ -56,14 +56,14 @@ S1 is the committed build. S2–S5 are a breadth map for verbal discussion, not 
 
 | Sprint | Focus | Unlocks | Status |
 |---|---|---|---|
-| [Sprint 0](Sprint-0-foundations.md) | Minimal scaffold, S1 tokens/primitives, coherent scenario data, short Value Playbook | S1 foundations | Not Started |
-| [Sprint 1](Sprint-1-app-shell-dashboard.md) | App shell, search, Dashboard + Pipeline, short Presenter Notes | Opening of S1 | Not Started |
-| [Sprint 2](Sprint-2-contracts-renewal.md) | Contracts, benchmark, self-contained renewal/approval flow + outcomes | **S1 without AI** | Not Started |
-| [Sprint 3](Sprint-3-vertice-ai.md) | Small scripted AI panel, S1 evidence and actions | **Complete S1**; optional S2 chat vignette | Not Started |
+| [Sprint 0](Sprint-0-foundations.md) | Minimal scaffold, S1 tokens/primitives, coherent scenario data, short Value Playbook | S1 foundations | Done |
+| [Sprint 1](Sprint-1-app-shell-dashboard.md) | App shell, search, Dashboard + Pipeline, short Presenter Notes | Opening of S1 | Done |
+| [Sprint 2](Sprint-2-contracts-renewal.md) | Contracts, benchmark, self-contained renewal/approval flow + outcomes | **S1 without AI** | Done |
+| [Sprint 3](Sprint-3-vertice-ai.md) | Small scripted AI panel, S1 evidence and actions | **Complete S1**; optional S2 chat vignette | Done |
 | [Sprint 4](Sprint-4-intake-workflows.md) | Requests list, New-request modal, Dynamic Intake, Request detail + Workflow, Tasks, approvals, Slack mock | **S3** | Deferred (post-interview) |
 | [Sprint 5](Sprint-5-insights-usage-risk.md) | Usage insights, Procurement insights, Analytics tabs, Vendor directory + risk, Expert Engage, Workflow builder | **S2, S4** | Deferred (post-interview) |
 | [Sprint 6](Sprint-6-p2p-budgets-ana.md) | Budgets, Purchase orders, Invoices + match, Catalog purchases, Ana negotiation workspace, Sourcing (RFP) | **S5** + Ana depth | Deferred (post-interview) |
-| [Sprint 7](Sprint-7-polish-rehearsal.md) | S1 recovery controls, polish, offline build, demo script, rehearsal | Interview-ready | Not Started |
+| [Sprint 7](Sprint-7-polish-rehearsal.md) | S1 recovery controls, polish, offline build, demo script, rehearsal | Interview-ready | In progress (rehearsal open) |
 | Sprint 8 *(stretch)* | Cloud Optimizer and AI Spend | S6 | Not Planned |
 
 **Committed scope: Sprints 0 → 1 → 2 → 3 → Sprint 7 rehearsal tasks.** Sprints 4–6 remain deferred, and none is a dependency of S1. Their sidebar destinations reuse one polished "Outside this demo" view with a short capability explanation and a return to the renewal. Do not visit those views in the main presentation. Preserve local screen-share delivery from the prior planning decisions; a hosted share link is not required by this plan.
