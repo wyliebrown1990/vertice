@@ -1,6 +1,6 @@
 # Demo Script: Salesforce Renewal (S1)
 
-Run-of-show for the Vertice SE interview. Value detail and sources: [VALUE_PLAYBOOK.md](VALUE_PLAYBOOK.md).
+Run-of-show for the Vertice SE interview. Value detail and sources: [VALUE_PLAYBOOK.md](VALUE_PLAYBOOK.md). Click-by-click test guide with expected values: [DEMO_WALKTHROUGH.md](DEMO_WALKTHROUGH.md).
 
 ## Before you share your screen
 
