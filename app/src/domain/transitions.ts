@@ -12,6 +12,8 @@ export const initialState = (): DemoState => ({
   futureTerms: [],
   savingsEntries: [],
   chat: [],
+  flows: {},
+  bookings: [],
 })
 
 export const defaultRequirements = (): Requirements => ({

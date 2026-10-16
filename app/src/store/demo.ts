@@ -13,10 +13,12 @@ import {
   type CheckpointId,
   type SubmitResult,
 } from '../domain/transitions'
-import type { ChatMessage, DemoState, Requirements } from '../domain/types'
+import { advanceFlow, applyChapterPoint, approveI2pReview, bookExpert, type ChapterId, type PointId, type StepOf } from '../domain/flows'
+import type { ChatMessage, DemoState, FlowId, Requirements } from '../domain/types'
 
 export const STORAGE_KEY = 'vertice-demo-v1'
-const STORAGE_VERSION = 1
+/** v2 adds full-demo flows and Expert Engage bookings (v1 saves migrate in place). */
+const STORAGE_VERSION = 2
 
 /** Falls back to memory if localStorage is unavailable (private mode, blocked). */
 const memory = new Map<string, string>()
@@ -66,6 +68,11 @@ interface DemoActions {
   addChat: (m: ChatMessage) => void
   updateChat: (id: string, patch: Partial<ChatMessage>) => void
   clearChat: () => void
+  /** Guarded full-demo flow step (no-op unless the flow is at `from`). */
+  advance: <F extends FlowId>(flow: F, from: StepOf<F>, to: StepOf<F>) => void
+  approveReview: (which: 'i2p-security' | 'i2p-legal') => void
+  book: (serviceId: string) => void
+  loadChapterPoint: (chapter: ChapterId, point: PointId) => void
 }
 
 export type DemoStore = DemoState & DemoActions
@@ -76,6 +83,8 @@ const pick = (s: DemoStore): DemoState => ({
   futureTerms: s.futureTerms,
   savingsEntries: s.savingsEntries,
   chat: s.chat,
+  flows: s.flows,
+  bookings: s.bookings,
 })
 
 export const useDemo = create<DemoStore>()(
@@ -100,6 +109,10 @@ export const useDemo = create<DemoStore>()(
         addChat: (m) => set((s) => ({ chat: [...s.chat, m] })),
         updateChat: (id, patch) => set((s) => ({ chat: s.chat.map((m) => (m.id === id ? { ...m, ...patch } : m)) })),
         clearChat: () => set((s) => ({ chat: [], epoch: s.epoch + 1 })),
+        advance: (flow, from, to) => apply((s) => advanceFlow(s, flow, from, to)),
+        approveReview: (which) => apply((s) => approveI2pReview(s, which)),
+        book: (serviceId) => apply((s) => bookExpert(s, serviceId)),
+        loadChapterPoint: (chapter, point) => set((s) => ({ ...applyChapterPoint(pick(s), chapter, point), epoch: s.epoch + 1 })),
       }
     },
     {
@@ -107,8 +120,9 @@ export const useDemo = create<DemoStore>()(
       version: STORAGE_VERSION,
       storage: createJSONStorage(() => safeStorage),
       partialize: (s) => pick(s),
-      // Incompatible saved versions restore the seed rather than migrating.
-      migrate: () => {
+      // v1 → v2 keeps the S1 scenario and adds empty flows; anything else restores the seed.
+      migrate: (persisted, version) => {
+        if (version === 1 && persisted && typeof persisted === 'object') return { ...initialState(), ...(persisted as object), flows: {}, bookings: [] }
         restoredFromIncompatible = true
         return initialState()
       },
@@ -116,7 +130,7 @@ export const useDemo = create<DemoStore>()(
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<DemoState>
         const chat = (p.chat ?? []).map((m) => (m.status === 'revealing' ? { ...m, status: 'interrupted' as const } : m))
-        return { ...current, ...p, chat }
+        return { ...current, ...p, chat, flows: p.flows ?? {}, bookings: p.bookings ?? [] }
       },
     },
   ),
@@ -135,5 +149,7 @@ export const useScenario = (): DemoState =>
       futureTerms: s.futureTerms,
       savingsEntries: s.savingsEntries,
       chat: s.chat,
+      flows: s.flows,
+      bookings: s.bookings,
     })),
   )

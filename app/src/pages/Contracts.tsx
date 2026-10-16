@@ -7,7 +7,11 @@ import { Card } from '../components/ui/Card'
 import { StatusPill } from '../components/ui/StatusPill'
 import { VendorLogo } from '../components/ui/VendorLogo'
 import { vendors, type Vendor } from '../data/vendors'
+import { Logo } from '../components/ui/kit'
+import { newContracts } from '../domain/chapters'
+import { flowStep } from '../domain/flows'
 import { noticeDays, noticeUrgency, portfolioTotal, securedVendorIds } from '../domain/selectors'
+import { vendorName } from '../data/directory'
 import { formatDate, relativeDays, usd } from '../lib/format'
 import { useScenario } from '../store/demo'
 
@@ -41,6 +45,9 @@ export function Contracts() {
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: 'renewalDate', dir: 1 })
   const secured = useMemo(() => securedVendorIds(state), [state])
   const activeId = state.request && state.request.stage !== 'completed' ? state.request.vendorId : null
+  const ana = flowStep(state, 'ana')
+  const inProgress = useMemo(() => new Set([activeId, ana !== 'none' && ana !== 'completed' ? 'gong' : null].filter(Boolean)), [activeId, ana])
+  const notLive = useMemo(() => newContracts(state), [state])
 
   const counts = useMemo(
     () => ({
@@ -50,9 +57,9 @@ export function Contracts() {
         return d !== null && d <= 60
       }).length,
       autorenew: vendors.filter((v) => v.autoRenew).length,
-      activity: (activeId ? 1 : 0) + secured.size,
+      activity: inProgress.size + secured.size,
     }),
-    [activeId, secured],
+    [inProgress.size, secured],
   )
 
   const rows = useMemo(() => {
@@ -64,13 +71,13 @@ export function Contracts() {
         return d !== null && d <= 60
       }
       if (filter === 'autorenew') return v.autoRenew
-      if (filter === 'activity') return v.id === activeId || secured.has(v.id)
+      if (filter === 'activity') return inProgress.has(v.id) || secured.has(v.id)
       return true
     })
     const val = (v: Vendor): string | number =>
       sort.key === 'notice' ? (noticeDays(v) ?? 9999) : sort.key === 'name' ? v.name : sort.key === 'department' ? v.department : v[sort.key]
     return [...list].sort((a, b) => (val(a) > val(b) ? 1 : val(a) < val(b) ? -1 : 0) * sort.dir)
-  }, [q, filter, sort, activeId, secured])
+  }, [q, filter, sort, inProgress, secured])
 
   const th = (key: SortKey, label: string, right = false) => (
     <th className={clsx('px-4 py-2.5 text-[12px] font-medium tracking-wide text-ink-3 uppercase', right && 'text-right')}>
@@ -176,12 +183,34 @@ export function Contracts() {
                     <td className="px-4 py-2.5">
                       <div className="flex flex-wrap gap-1">
                         <StatusPill tone="success">Live</StatusPill>
-                        {v.id === activeId && <StatusPill tone="info">Renewal in progress</StatusPill>}
+                        {inProgress.has(v.id) && <StatusPill tone="info">Renewal in progress</StatusPill>}
                         {secured.has(v.id) && <StatusPill tone="violet">Renewal secured</StatusPill>}
                       </div>
                     </td>
                   </tr>
                 ))}
+                {filter === 'all' &&
+                  !q &&
+                  notLive.map((c) => (
+                    <tr key={c.vendorId} onClick={() => navigate(`/vendors/${c.vendorId}`)} className="cursor-pointer border-b border-line-soft bg-primary-wash/40 last:border-0 hover:bg-primary-wash">
+                      <td className="px-4 py-2.5">
+                        <span className="flex items-center gap-3">
+                          <Logo id={c.vendorId} size="sm" />
+                          <span>
+                            <span className="block font-medium text-ink">{vendorName(c.vendorId)}</span>
+                            <span className="block text-[12px] text-ink-3">{c.product}</span>
+                          </span>
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5 text-ink-2">{c.department}</td>
+                      <td className="px-4 py-2.5 text-right font-medium text-ink tabular-nums">{usd(c.annualCost)}</td>
+                      <td className="px-4 py-2.5 text-ink-4">Starts {formatDate(c.start)}</td>
+                      <td className="px-4 py-2.5 text-ink-2">{formatDate(c.end)}</td>
+                      <td className="px-4 py-2.5">
+                        <StatusPill tone="warning">Not yet live</StatusPill>
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           )}

@@ -2,6 +2,7 @@ import clsx from 'clsx'
 import {
   ArrowDownUp,
   ChevronDown,
+  Cloud,
   CircleCheck,
   CircleHelp,
   FileText,
@@ -56,9 +57,18 @@ function NavItem({ item }: { item: Item }) {
   )
 }
 
-function Group({ label, icon: Icon, items }: { label: string; icon: Item['icon']; items: Item[] }) {
+interface SubItem {
+  label: string
+  to: string
+  /** Extra path prefixes that keep this entry active (e.g. other Analytics tabs). */
+  match?: string[]
+}
+
+const subActive = (pathname: string, i: SubItem) => pathname.startsWith(i.to) || !!i.match?.some((m) => pathname.startsWith(m))
+
+function Group({ label, icon: Icon, items }: { label: string; icon: Item['icon']; items: SubItem[] }) {
   const { pathname } = useLocation()
-  const [open, setOpen] = useState(() => items.some((i) => pathname.startsWith(i.to)))
+  const [open, setOpen] = useState(() => items.some((i) => subActive(pathname, i)))
   return (
     <div>
       <button
@@ -76,10 +86,11 @@ function Group({ label, icon: Icon, items }: { label: string; icon: Item['icon']
             <NavLink
               key={i.to}
               to={i.to}
+              end
               className={({ isActive }) =>
                 clsx(
                   'flex h-8 items-center rounded-md px-2.5 text-[13.5px]',
-                  isActive ? 'bg-primary-tint font-medium text-primary' : 'text-ink-3 hover:bg-line-soft hover:text-ink',
+                  isActive || subActive(pathname, i) ? 'bg-primary-tint font-medium text-primary' : 'text-ink-3 hover:bg-line-soft hover:text-ink',
                 )
               }
             >
@@ -109,18 +120,18 @@ export function Sidebar() {
     { label: 'Contracts', to: '/contracts', icon: FileText },
     {
       label: 'Documents',
-      to: '/outside/documents',
+      to: '/documents',
       icon: Folder,
       badge: <span className="rounded-full bg-primary-tint px-1.5 py-px text-[10.5px] font-semibold text-primary">New</span>,
     },
   ]
   const buying: Item[] = [
-    { label: 'Offers', to: '/outside/offers', icon: Tag },
-    { label: 'Catalog purchases', to: '/outside/catalog', icon: ShoppingCart },
-    { label: 'Purchase orders', to: '/outside/purchase-orders', icon: Monitor },
-    { label: 'Orders', to: '/outside/orders', icon: Package },
-    { label: 'Invoices', to: '/outside/invoices', icon: ReceiptText },
-    { label: 'Savings', to: '/outside/savings', icon: Percent },
+    { label: 'Offers', to: '/offers', icon: Tag },
+    { label: 'Catalog purchases', to: '/catalog', icon: ShoppingCart },
+    { label: 'Purchase orders', to: '/purchase-orders', icon: Monitor },
+    { label: 'Orders', to: '/orders', icon: Package },
+    { label: 'Invoices', to: '/invoices', icon: ReceiptText },
+    { label: 'Savings', to: '/savings', icon: Percent },
   ]
 
   return (
@@ -148,24 +159,43 @@ export function Sidebar() {
           label="Insights"
           icon={Lightbulb}
           items={[
-            { label: 'Analytics', to: '/outside/analytics', icon: Lightbulb },
-            { label: 'Procurement', to: '/outside/procurement-insights', icon: Lightbulb },
-            { label: 'Usage', to: '/outside/usage', icon: Lightbulb },
+            { label: 'Analytics', to: '/analytics/spend-insights', match: ['/analytics/'] },
+            { label: 'Procurement', to: '/insights/procurement' },
+            { label: 'Usage', to: '/insights/usage' },
+            { label: 'Budgets', to: '/insights/budgets' },
+            { label: 'AI spend', to: '/insights/ai-spend' },
           ]}
         />
         <Group
           label="Vendors"
           icon={Store}
           items={[
-            { label: 'Directory', to: '/outside/vendors', icon: Store },
-            { label: 'Expert Engage', to: '/outside/expert-engage', icon: Store },
+            { label: 'Directory', to: '/vendors', match: ['/vendors/'] },
+            { label: 'Expert Engage', to: '/expert-engage' },
           ]}
         />
-        <NavItem item={{ label: 'Workflows', to: '/outside/workflows', icon: Workflow }} />
+        <Group
+          label="Workflows"
+          icon={Workflow}
+          items={[
+            { label: 'Configuration', to: '/workflows', match: ['/workflows/edit/'] },
+            { label: 'Templates', to: '/workflows/templates' },
+          ]}
+        />
+        <Group
+          label="Cloud Optimizer"
+          icon={Cloud}
+          items={[
+            { label: 'Overview', to: '/cloud/overview' },
+            { label: 'Optimization', to: '/cloud/optimization' },
+            { label: 'RI Optimizer', to: '/cloud/ri-optimizer' },
+            { label: 'PPA/EDP', to: '/cloud/edp' },
+          ]}
+        />
       </nav>
       <div className="space-y-0.5 border-t border-line px-3 py-3">
         <NavItem item={{ label: 'Help', to: '/outside/help', icon: CircleHelp }} />
-        <NavItem item={{ label: 'Settings', to: '/outside/settings', icon: Settings }} />
+        <NavItem item={{ label: 'Settings', to: '/settings/integrations', icon: Settings, match: ['/settings/'] }} />
         <div className="flex items-center gap-3 rounded-lg px-3 py-2">
           <Avatar name={me.name} tone="violet" />
           <div className="min-w-0 leading-tight">

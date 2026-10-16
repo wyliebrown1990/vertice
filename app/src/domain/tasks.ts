@@ -1,5 +1,6 @@
 import { S1, S1_REQUEST_ID } from '../data/scenario'
-import { vendorById } from '../data/vendors'
+import { logoVendor } from '../data/directory'
+import { chapterTasks, gongTaskSuperseded } from './chapters'
 import type { DemoState } from './types'
 
 export interface Task {
@@ -63,9 +64,11 @@ export const s1Task = (s: DemoState): Task | null => {
 
 export const allTasks = (s: DemoState): Task[] => {
   const t = s1Task(s)
-  return t ? [t, ...seeded] : seeded
+  const base = seeded.filter((x) => !(x.id === 'task-gong' && gongTaskSuperseded(s)))
+  const chapters: Task[] = chapterTasks(s).map(({ logoId, ...c }) => ({ ...c, vendorId: logoId }))
+  return [...(t ? [t] : []), ...chapters, ...base]
 }
 
 export const myOpenTasks = (s: DemoState) => allTasks(s).filter((t) => t.mine)
 
-export const taskVendor = (t: Task) => vendorById(t.vendorId)!
+export const taskVendor = (t: Task) => logoVendor(t.vendorId) ?? { name: t.context, color: '#64748b', mono: t.context.slice(0, 1) }

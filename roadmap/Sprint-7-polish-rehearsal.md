@@ -2,7 +2,7 @@
 
 > **PROGRESS TRACKING**: Update this document as you complete tasks.
 > Mark checkboxes `[x]` when done. Do NOT create separate status docs.
-> Last updated: 2026-10-13 by Codex — demo scope and narrative review
+> Last updated: 2026-10-15 by Claude (Beans-bot): automated rehearsal checks recorded; spoken rehearsal still open
 
 ## Overview
 Run this immediately after Sprints 0–3. Make the single renewal story reliable, readable and easy to present. Sprints 4–6, S2–S5 walkthroughs and a general guided-tour system are not prerequisites. Reserve the final two days of the one-week planning budget for this work. Platform: local browser demo, presented by screen share.
@@ -20,13 +20,13 @@ Run this immediately after Sprints 0–3. Make the single renewal story reliable
 - [x] Review at 1440×900 and 1280×800 with browser zoom at 100%: primary action, headline numbers and evidence are legible. Supporting details may scroll; no requirement to cram every reference element above the fold. Expand AI for its comparison table.
 - [ ] Visible focus, labelled controls, modal Escape/focus return, readable status text, hover feedback and brief confirmation toasts. Reduced motion skips decorative movement and chat reveal. Do not add artificial skeleton delays to instant local data.
 - [x] Favicon and title `Vertice Demo — Wylie Brown`, with the subtle fictional-data/scripted-AI disclosure. No login/splash work.
-- [ ] Remove or explain any apparent action without supported behaviour. Optional S2 replies and Slack illustration may be cut without affecting release readiness.
+- [x] Remove or explain any apparent action without supported behaviour. Optional S2 replies and Slack illustration may be cut without affecting release readiness.
 
 ### Offline build & resilience
 - [x] From `app/`, build and serve the production `dist/` through the local preview command. Use a fixed documented port/origin so persisted demo state is predictable. The server must remain running; `file://` is not supported.
 - [x] With internet unavailable but localhost running, hard-refresh dashboard and a deep contract/request URL; fonts, logos, icons, routes and both required AI scripts work. No CDN, remote font, analytics or live-model dependency.
 - [x] Confirm no console errors on S1, no broken assets, and no external requests during the flow. Keep a tested copy of the build and exact launch instructions.
-- [ ] Keep the four key rehearsal screenshots (dashboard, evidence, final offer, outcome) as a fallback beside the script. Optional: a short narrated S1 recording. A zip of dist alone is not a runnable fallback without a local static server.
+- [x] Keep the four key rehearsal screenshots (dashboard, evidence, final offer, outcome) as a fallback beside the script. Optional: a short narrated S1 recording. A zip of dist alone is not a runnable fallback without a local static server.
 
 ### Demo script & learning
 - [x] `docs/DEMO_SCRIPT.md` starts with the setting, disclosure and discovery question: Alex leads Procurement at fictional Northwind; AI and outcomes are scripted. Recap the problem before touching the UI.
@@ -39,7 +39,7 @@ Run this immediately after Sprints 0–3. Make the single renewal story reliable
 
 ### Rehearsal QA
 - [ ] Complete S1 **three consecutive times** from clean state on the production build without internet. Use `/Browser` → `agent-browser` for repeatable checks; at least one pass is a timed spoken presentation with Wylie at the actual screen-share resolution. Capture key screenshots once, reusing them unless a change alters them.
-- [ ] Include one recovery pass: reload mid-approval, repeat completion, reset while AI is revealing, type text containing shortcut characters, visit a deferred route, and recover through the three checkpoints. Confirm one savings increment and no stale timers/data.
+- [x] Include one recovery pass: reload mid-approval, repeat completion, reset while AI is revealing, type text containing shortcut characters, visit a deferred route, and recover through the three checkpoints. Confirm one savings increment and no stale timers/data.
 - [ ] Time the spoken flow. Cut extra tabs, stats or prompts when it runs long; preserve the outcome and return to dashboard. Do not add features during rehearsal.
 
 ### Progress note (2026-10-13)
@@ -47,15 +47,32 @@ Run this immediately after Sprints 0–3. Make the single renewal story reliable
 - Open: side-by-side polish pass, the four fallback screenshots as a curated set, and **all rehearsal QA**: three clean timed runs, one recovery pass, and Wylie's spoken rehearsal at the real screen-share resolution.
 - Note on "offline": verified that no external origins are requested. A literal Wi-Fi-off run is part of rehearsal.
 
+### Progress note (2026-10-15)
+- **Automated on the production build** (`bun run preview`, http://localhost:4173, 1440×900), with `agent-browser`:
+  - Three consecutive clean S1 runs: baseline $1,210,000 → outcome $1,484,400. Each run ended with exactly 1 savings entry and 1 future term (13–15 s each, unspoken).
+  - Recovery pass:
+    - Reloading mid-approval keeps Approve offer.
+    - Repeating completion is a no-op (1 entry).
+    - Shift+R during an AI reveal clears chat and returns to $1,210,000.
+    - Shift+R is ignored while typing in the requirements modal.
+    - Checkpoints Outcome, Final offer and Start each land on the right route.
+  - Network: no external requests; only localhost:4173.
+- **Fallback screenshots:** `qa/fallback/1-dashboard.png`, `2-evidence-benchmark.png`, `3-final-offer.png`, `4-outcome.png` (git-ignored, local).
+- **Dead actions:** the full demo (Sprints 8–14) replaced almost every "Outside this demo" destination. What remains (11 Analytics tabs, Help, Page layout, some connectors) is labelled "Available in the full product" or answers with an explanatory toast.
+- **Still open, needs Wylie:**
+  - A literal Wi-Fi-off run.
+  - The timed spoken S1 rehearsal at the real screen-share resolution.
+  - Final timing cuts.
+
 ## Validation (front-end-only adaptation)
-- [ ] Typecheck, focused calculation/state tests and production build pass once for the final candidate; rerun affected checks only after changes.
+- [x] Typecheck, focused calculation/state tests and production build pass once for the final candidate; rerun affected checks only after changes.
 - [ ] Record the three S1 run results, timing, viewport and offline setup here. Inspect stored state after completion and reset, and verify it matches the reloaded UI.
-- [ ] Link the four reusable screenshots and note any remaining limitation. Do not create a second status report or require evidence for deferred S2–S5 workflows.
+- [x] Link the four reusable screenshots and note any remaining limitation. Do not create a second status report or require evidence for deferred S2–S5 workflows.
 
 ## Acceptance Criteria
 - [ ] S1 passes three clean offline runs, fits the presentation slot and can recover directly to final offer/outcome.
-- [ ] Every shown action works or clearly explains its demo boundary; required AI actions never lead to deferred features.
-- [ ] The scenario's deadline, scope, annual reduction and avoided uplift are consistent in UI, script and notes.
+- [x] Every shown action works or clearly explains its demo boundary; required AI actions never lead to deferred features.
+- [x] The scenario's deadline, scope, annual reduction and avoided uplift are consistent in UI, script and notes.
 - [ ] The script/playbook and fallback screenshots are usable without relying on live AI or the internet. Wylie's spoken rehearsal remains unchecked until it actually happens.
 
 ## Notes for Future Developers

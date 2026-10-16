@@ -30,7 +30,7 @@ export function OutsideDemo({ missing }: { missing?: boolean }) {
         <p className="mx-auto mt-3 max-w-[440px] text-[14.5px] leading-relaxed text-ink-2">{body}</p>
         {!missing && mod && (
           <p className="mx-auto mt-3 max-w-[440px] text-[13px] text-ink-3">
-            It’s part of the Vertice platform, but this demo covers only the Salesforce renewal.
+            It’s part of the Vertice platform but not built in this demo.
           </p>
         )}
         <div className="mt-7 flex justify-center gap-2">

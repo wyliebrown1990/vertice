@@ -6,7 +6,8 @@ import { AS_OF, S1, s1Derived } from '../data/scenario'
 import { savingsHistory, type SavingsRecord } from '../data/savingsHistory'
 import { vendors, vendorById, type Department, type Vendor } from '../data/vendors'
 import { daysFromToday, monthKey } from '../lib/format'
-import type { DemoState, RequestStage } from './types'
+import { chapterFutureTerms, chapterSavings } from './chapters'
+import type { DemoState, FutureTerm, RequestStage } from './types'
 
 /* ---------- Portfolio (current live terms only) ---------- */
 
@@ -14,7 +15,10 @@ export const portfolioTotal = () => vendors.reduce((sum, v) => sum + v.annualCos
 
 export const liveContractCount = () => vendors.length
 
-export const futureSignedCount = (s: DemoState) => s.futureTerms.length
+/** Signed next terms: S1 plus any completed chapter renewal (Ana/Gong). */
+export const allFutureTerms = (s: DemoState): FutureTerm[] => [...s.futureTerms, ...chapterFutureTerms(s)]
+
+export const futureSignedCount = (s: DemoState) => allFutureTerms(s).length
 
 export interface DeptSlice {
   department: Department | 'Others'
@@ -74,7 +78,7 @@ export interface PipelineColumn {
 }
 
 /** Vendors whose next term is already signed through a completed request. */
-export const securedVendorIds = (s: DemoState) => new Set(s.futureTerms.map((t) => t.vendorId))
+export const securedVendorIds = (s: DemoState) => new Set(allFutureTerms(s).map((t) => t.vendorId))
 
 /**
  * Current contracts grouped by renewal month.
@@ -95,7 +99,7 @@ export const pipeline = (s: DemoState, view: 'upcoming' | 'in-progress'): Pipeli
 
 /* ---------- Savings ---------- */
 
-export const allSavings = (s: DemoState): SavingsRecord[] => [...savingsHistory, ...s.savingsEntries]
+export const allSavings = (s: DemoState): SavingsRecord[] => [...savingsHistory, ...s.savingsEntries, ...chapterSavings(s)]
 
 export const savingsSummary = (s: DemoState) => {
   const records = allSavings(s)

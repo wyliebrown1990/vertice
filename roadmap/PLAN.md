@@ -2,7 +2,7 @@
 
 > **PROGRESS TRACKING**: This is the master plan. Update sprint docs as you work.
 > Do NOT create separate status documents. Mark checkboxes in sprint files.
-> Last updated: 2026-10-13 by Claude (Beans-bot): Sprints 0–3 built; Sprint 7 rehearsal open
+> Last updated: 2026-10-15 by Claude (Beans-bot): Sprints 0–3 built; Sprint 7 automated rehearsal checks done (spoken rehearsal open); full demo (Sprints 8–14) built per [FULL-DEMO-PLAN.md](FULL-DEMO-PLAN.md)
 
 ## Project Overview
 
@@ -65,6 +65,21 @@ S1 is the committed build. S2–S5 are a breadth map for verbal discussion, not 
 | [Sprint 6](Sprint-6-p2p-budgets-ana.md) | Budgets, Purchase orders, Invoices + match, Catalog purchases, Ana negotiation workspace, Sourcing (RFP) | **S5** + Ana depth | Deferred (post-interview) |
 | [Sprint 7](Sprint-7-polish-rehearsal.md) | S1 recovery controls, polish, offline build, demo script, rehearsal | Interview-ready | In progress (rehearsal open) |
 | Sprint 8 *(stretch)* | Cloud Optimizer and AI Spend | S6 | Not Planned |
+
+**Full demo (built 2026-10-15):** [FULL-DEMO-PLAN.md](FULL-DEMO-PLAN.md) maps all 27 Vertice products, platform modules and solutions to one Northwind journey and replaces Sprints 4–6 and the old Sprint 8 stretch with:
+
+| Sprint | Focus | Status |
+|---|---|---|
+| [Sprint 8](Sprint-8-full-demo-foundations.md) | Flows, chapter data + tests, real-app sidebar, Chapters picker, Settings | Done |
+| [Sprint 9](Sprint-9-ana-contract-center.md) | Ana (Gong) + Contract Center AI + new AI intents | Done |
+| [Sprint 10](Sprint-10-intake-to-procure.md) | Intake-to-Procure (Slack → intake → risk → reviews → budget → PO) | Done |
+| [Sprint 11](Sprint-11-insights-usage-workflows.md) | Analytics, Procurement insights, Usage, Workflow Builder | Done |
+| [Sprint 12](Sprint-12-sourcing-onboarding.md) | RFP Builder, Vendor Onboarding, Directory, Expert Engage | Done |
+| [Sprint 13](Sprint-13-procure-to-pay.md) | POs, invoices + Contract Price Match, catalog, offers, savings, budgets | Done |
+| [Sprint 14](Sprint-14-ai-cloud-cost.md) | AI Cost Optimization + Cloud Optimizer | Done |
+| [Sprint 15](Sprint-15-full-demo-rehearsal.md) | Chapter notes, regression, rehearsal | Automated QA done; spoken rehearsal open |
+
+The S1 interview path is unchanged; every chapter is additive and reached through Presenter › Chapters.
 
 **Committed scope: Sprints 0 → 1 → 2 → 3 → Sprint 7 rehearsal tasks.** Sprints 4–6 remain deferred, and none is a dependency of S1. Their sidebar destinations reuse one polished "Outside this demo" view with a short capability explanation and a return to the renewal. Do not visit those views in the main presentation. Preserve local screen-share delivery from the prior planning decisions; a hosted share link is not required by this plan.
 

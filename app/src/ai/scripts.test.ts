@@ -28,9 +28,19 @@ describe('intent matching', () => {
   })
 
   test('never answers another vendor with Salesforce numbers', () => {
-    expect(idOf('what savings can we get on Gong?')).toBe('other-vendor')
-    expect(idOf('How much can we save on Gong?')).toBe('other-vendor')
+    // Gong now has its own chapter (Ana); other vendors fall back honestly.
+    expect(idOf('what savings can we get on Gong?')).toBe('ana-gong')
+    expect(idOf('How much can we save on Gong?')).toBe('ana-gong')
     expect(idOf('negotiate the HubSpot renewal price')).toBe('other-vendor')
+  })
+
+  test('chapter prompts', () => {
+    expect(idOf('do any of our contracts have uncapped liability')).toBe('liability')
+    expect(idOf('where is the bottleneck in new purchases?')).toBe('bottleneck')
+    expect(idOf('can we consolidate asana and monday')).toBe('consolidate')
+    expect(idOf('how do we cut our AI spend')).toBe('ai-spend')
+    expect(idOf('where can we save on AWS')).toBe('cloud')
+    expect(idOf('which vendors give us the most leverage')).toBe('leverage')
   })
 
   test('unknown prompts fall back honestly', () => {

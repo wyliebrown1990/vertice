@@ -1,4 +1,4 @@
-# Vertice Demo: Salesforce Renewal (S1)
+# Vertice Demo: Salesforce Renewal (S1) + Full Platform Tour
 
 A front-end-only, clickable demo concept of a Vertice-style procurement platform, built for a Sales Engineer interview.
 
@@ -20,7 +20,7 @@ Other checks, run from `app/`:
 
 ```bash
 bun run typecheck
-bun run test        # scenario reconciliation + state machine tests
+bun run test        # S1 + chapter reconciliation and state-machine tests (41)
 bun run lint
 ```
 
@@ -32,7 +32,23 @@ Dashboard → Salesforce pipeline tile (January) → contract (notice deadline D
 
 All numbers come from one canonical scenario (`app/src/data/scenario.ts`, spec in `roadmap/PLAN.md`), computed in `app/src/domain/selectors.ts`.
 
-Other sidebar modules open one shared “Outside this demo” view.
+## The full demo (chapters)
+
+Every Vertice product, platform module and solution is clickable, told as one connected Northwind year. Plan: `roadmap/FULL-DEMO-PLAN.md`; sprint docs 8–15 in `roadmap/`. Chapters are additive: the S1 path and its numbers are unchanged until you run them.
+
+| Ch | Story | Start at |
+|---|---|---|
+| B | Buy new software: Slack → Dynamic Intake → vendor risk → parallel Security / AI Compliance / AI Legal → budget-aware approval → DocuSign → contract + PO | `/intake/slack` |
+| C | Choose a vendor: 7-step RFP Builder → Vendor Portal onboarding | New request › Select a vendor |
+| D | Pay correctly: Contract Price Match catches a $90,000 Zscaler overbill; TeamViewer invoice auto-matches its PO | `/invoices` |
+| E | See waste: Analytics, Usage, shadow IT, Asana/monday.com consolidation | `/analytics/spend-insights` |
+| E2 | Fix the bottleneck: AI finds it, Workflow Builder adds Jira steps, metrics move | `/insights/procurement` |
+| A | Save on a strategic renewal (S1) | `/dashboard` |
+| A2 | Ana renews Gong autonomously ($50,000, 24%) | `/contracts/gong/overview` |
+| F | AI spend + Cloud Optimizer; commitments hand off to Vertice | `/insights/ai-spend` |
+| L | Legal: Contract Center AI (create contract from file, AI comparison, liability Q&A) | `/documents` |
+
+The dashboard goes $1,210,000 → $1,484,400 (S1) → $1,534,400 (S1 + Ana). Cost avoidance and invoice errors appear in Savings but never in Total savings. Help, 11 of the 20 Analytics tabs and a few connectors show an explicit “Available in the full product” card.
 
 ## Presenter controls
 
@@ -44,7 +60,8 @@ Open with `?presenter=1` (for example `http://localhost:4173/dashboard?presenter
 | Requirements submitted, final offer ready | Final offer | — |
 | Completed renewal, one savings entry | Outcome | — |
 | Reveal final offer (only while negotiating) | — | `Shift+N` |
-| Presenter notes | Notes | `.` |
+| Presenter notes (S1 beats and every chapter beat) | Notes | `.` |
+| Jump to any chapter (Start / Mid / End, keeps other chapters) | Chapters | — |
 
 Shortcuts are ignored while typing in inputs. Notes are closed by default and after reload. They are visible to the audience if you open them while sharing your screen.
 

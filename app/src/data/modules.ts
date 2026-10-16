@@ -1,6 +1,7 @@
 /**
- * Deferred modules (Sprints 4–6). Their sidebar entries share one
- * "Outside this demo" view with a concise capability statement.
+ * Capability statements for the shared "Outside this demo" view. Since the
+ * full demo (Sprints 8–14) only Help still routes here; the rest are kept as
+ * copy references for /outside/:slug deep links.
  * Statements paraphrase research/PRODUCT_FEATURES.md (captured 2026-10-13).
  */
 export interface OutsideModule {

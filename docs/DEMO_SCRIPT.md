@@ -81,3 +81,28 @@ Close: **“Which upcoming renewal would be worth reviewing first?”**
 3. How is SE success measured: win rate, technical-win rate, time to value?
 
 Optional follow-ups: Is negotiation scope SaaS-only or all indirect spend? Is three-way match live or roadmap? Is cloud optimisation AWS-only?
+
+## Full platform tour (25–30 min, post-interview)
+
+Use **Presenter › Chapters** to jump between chapters or recover. The order follows Vertice’s lifecycle, a year at Northwind. Every chapter has notes (`.`); quote published claims as Vertice’s, never as Northwind results.
+
+1. **Home base (1 min).** Start on the dashboard: Total savings, pipeline, tasks, Requests and Savings opportunity. “Everything starts from one front door and one view.”
+2. **B: Buy new software (6 min).**
+   - Slack: Sam sends the order form, then clicks Review purchase details. Dynamic Intake pre-fills from it (source hints), shows preferred vendors and the benchmark, and checks the budget. Submit.
+   - Risk: LinkDesk (fictional) is High risk, so switch to TeamViewer.
+   - Reviews: open the **Workflow** tab to show Security, AI Compliance and AI Legal running in parallel. Dana approves in Slack; Leah approves with a redline.
+   - Priya sees “12% of the Support budget, 95% at year end”. Sign, and PO-1042 syncs to NetSuite.
+3. **C: Choose a vendor (3 min).** New request › Select a vendor. RFP Builder: suggested vendors, weights, 12 AI-drafted questions, responses, scored comparison, then Lexora at 9.1/10. Onboard, then show the Vendor Portal tasks.
+4. **D: Pay correctly (3 min).** Invoices: Zscaler bills $330K after a $240K renewal, so Contract Price Match flags +$90,000 and you return it with the drafted email. The TeamViewer invoice auto-matches PO-1042, the ≥ $5,000 rule routes it to Sam and Priya, and it’s paid. Then Budgets.
+5. **E: See waste (3 min).** Analytics: Spend Insights, then SaaS Stack Matrix (ask Vertice AI for leverage), then Cost/Cash Forecast. Usage: shadow IT, then Asana + monday.com, then Create consolidation request.
+6. **E2: Fix the bottleneck (3 min).** Procurement insights: Find bottlenecks (4.8 days in Security Review), then “Take me to the flow”. Drag Create Jira Ticket and Set as Live. Back on insights: 0 overdue, 1.9 days.
+7. **A + A2: Renewals (5 min).** Salesforce as in the S1 talk track, compressed. Then Gong: Negotiate with Ana, approve her plan, show vendor replies, and approve the result ($50,000, 24%). “Experts for strategic deals, Ana for the long tail; humans approve both.”
+8. **F: Beyond SaaS (2 min).** AI spend: $84.6K a month, 8% savings; Anthropic is 85% through its commitment, so start that renewal. Cloud Optimizer: $650K in savings, then hand the EDP renewal to Vertice experts.
+9. **Close (1 min).** Dashboard at $1,534,400. Ask: “Which of these would be worth reviewing first at your company?”
+
+**Persona cuts (5–8 min):**
+- **Procurement:** B, then E2, then A.
+- **Finance:** E (Savings and ROI, Forecast), then D, then F.
+- **IT & Security:** E (shadow IT), then B (risk and reviews), then Settings › Integrations.
+- **Legal:** L (Documents: create from file, liability Q&A), then B (AI Legal), then Settings › Compliance.
+- **Cloud Engineers:** F (cloud), then Expert Engage.

@@ -12,6 +12,41 @@ import { s1Summary } from '../../domain/selectors'
 import { formatDate, num, pct, usd } from '../../lib/format'
 import { requestPath } from '../../lib/routes'
 import { useDemo } from '../../store/demo'
+import { ANA, anaDerived } from '../../data/chapters/ana'
+import { reached } from '../../domain/flows'
+
+function AnaOutcome() {
+  const d = anaDerived()
+  const navigate = useNavigate()
+  return (
+    <PageBody>
+      <Card className="mx-auto max-w-[760px] overflow-hidden">
+        <div className="border-b border-line bg-success-tint/50 px-6 py-5">
+          <div className="flex items-center gap-2 text-[13px] font-medium text-success-ink">
+            <CircleCheckBig className="size-4" /> Renewal secured by Ana · approved by Alex Morgan · effective {formatDate(ANA.nextTermStart)}
+          </div>
+          <div className="mt-2 flex flex-wrap items-baseline gap-3">
+            <span className="text-[34px] font-semibold tracking-[-0.03em] text-ink tabular-nums">{usd(d.annualReduction)}</span>
+            <StatusPill tone="success">{pct(d.annualReductionPct)} lower</StatusPill>
+          </div>
+          <div className="text-[14px] text-ink-2">Annual spend reduction vs today’s contract</div>
+        </div>
+        <div className="space-y-4 px-6 py-5">
+          <div className="space-y-3.5">
+            <Bar label={`Current annual cost (${num(ANA.currentSeats)} seats)`} value={d.currentAnnualCost} max={d.currentAnnualCost} tone="bg-ink-4" />
+            <Bar label={`Next-term annual cost (${num(ANA.targetSeats)} seats)`} value={d.futureAnnualCost} max={d.currentAnnualCost} tone="bg-primary" />
+          </div>
+          <p className="text-[12.5px] text-ink-3">
+            {usd(d.scopeReduction)} scope + {usd(d.unitPriceReduction)} price, locked for {ANA.termMonths} months. Avoided uplift {usd(d.avoidedUplift)} is tracked separately.
+          </p>
+          <Button onClick={() => navigate('/dashboard', { state: { savingsAdded: d.annualReduction } })}>
+            Back to dashboard <ArrowRight className="size-4" />
+          </Button>
+        </div>
+      </Card>
+    </PageBody>
+  )
+}
 
 function Bar({ label, value, max, tone }: { label: string; value: number; max: number; tone: string }) {
   return (
@@ -134,6 +169,7 @@ export function ContractOutcomes() {
   const vendor = useOutletContext<Vendor>()
   const stage = useDemo((s) => s.request?.stage ?? 'none')
   const hist = savingsHistory.find((r) => r.vendorId === vendor.id)
+  const anaDone = useDemo((s) => reached(s, 'ana', 'completed'))
 
   if (vendor.id === 'salesforce') {
     return (
@@ -156,6 +192,8 @@ export function ContractOutcomes() {
       </PageBody>
     )
   }
+
+  if (vendor.id === 'gong' && anaDone) return <AnaOutcome />
 
   return (
     <PageBody>

@@ -1,12 +1,15 @@
+import * as Popover from '@radix-ui/react-popover'
 import clsx from 'clsx'
-import { Flag, NotebookText, RotateCcw, Sparkles, Trophy } from 'lucide-react'
+import { BookOpen, Flag, NotebookText, RotateCcw, Sparkles, Trophy } from 'lucide-react'
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { SidePanel } from '../components/ui/Overlay'
+import { CHAPTERS, type ChapterId, type PointId } from '../domain/flows'
 import { checkpointRoute, type CheckpointId } from '../domain/transitions'
 import { useDemo } from '../store/demo'
 import { useUi } from '../store/ui'
-import { notes } from './notes'
+import { chapterNotes, type ChapterBeat } from './chapterNotes'
+import { notes, type Beat } from './notes'
 import { useBeat } from './useBeat'
 
 const isTyping = (t: EventTarget | null) => {
@@ -86,6 +89,7 @@ export function PresenterControls() {
           <Trophy className="size-3.5" /> Outcome
         </button>
         <span className="mx-0.5 h-4 w-px bg-white/15" />
+        <ChapterPicker btn={btn} />
         <button className={clsx(btn, notesOpen && 'bg-white/15 text-white')} onClick={() => setNotesOpen(!notesOpen)} title="Toggle notes (.)">
           <NotebookText className="size-3.5" /> Notes
         </button>
@@ -99,9 +103,66 @@ export function PresenterControls() {
   )
 }
 
+/**
+ * Full-demo chapters (roadmap/FULL-DEMO-PLAN.md §4). Loading a point sets that
+ * chapter's flows and keeps everything else, so chapters can be stacked in
+ * lifecycle order. Reset still restores the clean S1 start.
+ */
+function ChapterPicker({ btn }: { btn: string }) {
+  const loadChapterPoint = useDemo((s) => s.loadChapterPoint)
+  const setAiOpen = useUi((s) => s.setAiOpen)
+  const toast = useUi((s) => s.toast)
+  const navigate = useNavigate()
+  const load = (chapter: ChapterId, point: PointId, route: string, label: string) => {
+    setAiOpen(false)
+    loadChapterPoint(chapter, point)
+    navigate(route)
+    toast(`Loaded chapter ${chapter}: ${label}`, 'info')
+  }
+  return (
+    <Popover.Root>
+      <Popover.Trigger className={btn} title="Jump to a full-demo chapter">
+        <BookOpen className="size-3.5" /> Chapters
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content side="top" align="start" sideOffset={8} className="z-50 w-[420px] rounded-xl bg-ink p-2 text-white shadow-[var(--shadow-pop)]">
+          <p className="px-2 pt-1 pb-2 text-[11px] font-semibold tracking-wide text-white/45 uppercase">Full demo · lifecycle order</p>
+          <ul className="space-y-0.5">
+            {CHAPTERS.map((c) => (
+              <li key={c.id} className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white/5">
+                <span className="w-7 shrink-0 text-[11px] font-semibold text-violet-300">{c.id}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[12.5px] font-medium">{c.title}</span>
+                  <span className="block truncate text-[11px] text-white/45">{c.persona}</span>
+                </span>
+                {(['start', 'mid', 'end'] as const).map((pt) => {
+                  const p = c.points[pt]
+                  return p ? (
+                    <Popover.Close
+                      key={pt}
+                      onClick={() => load(c.id, pt, p.route, p.label)}
+                      title={p.label}
+                      className="rounded-md bg-white/8 px-2 py-1 text-[11px] font-medium text-white/80 capitalize hover:bg-white/15 hover:text-white"
+                    >
+                      {pt}
+                    </Popover.Close>
+                  ) : (
+                    <span key={pt} className="w-[38px]" />
+                  )
+                })}
+              </li>
+            ))}
+          </ul>
+          <p className="px-2 pt-2 pb-1 text-[11px] text-white/40">Each point sets that chapter only; Reset (Shift+R) returns to the clean S1 start.</p>
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
+  )
+}
+
 function NotesPanel({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const beat = useBeat()
-  const n = notes[beat]
+  const n = beat in notes ? notes[beat as Beat] : chapterNotes[beat as ChapterBeat]
   return (
     <SidePanel open={open} onOpenChange={onOpenChange} title="Presenter notes" widthClass="w-[340px]" side="left" dark>
       <div className="h-full space-y-4 overflow-y-auto px-4 py-4 text-[13px] leading-relaxed">

@@ -4,44 +4,14 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Avatar, VerticeMark } from '../components/ui/Avatar'
 import { SidePanel } from '../components/ui/Overlay'
-import { scenarioStage } from '../domain/selectors'
-import type { ChatAction, ChatBlock, ChatMessage, DemoState } from '../domain/types'
+import type { ChatAction, ChatBlock, ChatMessage } from '../domain/types'
 import { contractPath, requestPath } from '../lib/routes'
 import { useDemo } from '../store/demo'
 import { useUi } from '../store/ui'
-import { fallbackBlocks, matchPrompt, s1Chips, s2Chips } from './scripts'
+import { finishReveals, newId, reply } from './engine'
+import { chipsFor } from './scripts'
 
 const REVEAL_MS = 2400
-const prefersReducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-
-let seq = 0
-const newId = () => `m${Date.now().toString(36)}${(seq++).toString(36)}`
-
-const snapshot = (): DemoState => {
-  const s = useDemo.getState()
-  return { request: s.request, draft: s.draft, futureTerms: s.futureTerms, savingsEntries: s.savingsEntries, chat: s.chat }
-}
-
-/** Build the reply from current scenario state at send time. */
-function reply(prompt: string): ChatMessage {
-  const state = snapshot()
-  const m = matchPrompt(prompt)
-  const blocks = m.kind === 'intent' ? m.intent.build(state) : fallbackBlocks(m.kind === 'other-vendor' ? m.vendorName : undefined)
-  return {
-    id: newId(),
-    role: 'assistant',
-    blocks,
-    status: prefersReducedMotion() ? 'done' : 'revealing',
-    stageAtSend: scenarioStage(state),
-    prompt,
-  }
-}
-
-/** Mark any in-flight reveal as finished (close, navigation, "Show answer"). */
-const finishReveals = () => {
-  const { chat, updateChat } = useDemo.getState()
-  chat.filter((m) => m.status === 'revealing').forEach((m) => updateChat(m.id, { status: 'done' }))
-}
 
 /* ---------------- rendering ---------------- */
 
@@ -226,7 +196,7 @@ export function AiLauncher() {
   }, [chat])
 
   const revealing = chat.some((m) => m.status === 'revealing')
-  const chips = useMemo(() => [...s1Chips(), ...s2Chips()], [])
+  const chips = useMemo(() => chipsFor(pathname), [pathname])
 
   const send = (text: string) => {
     const prompt = text.trim()
@@ -244,7 +214,10 @@ export function AiLauncher() {
 
   const onAction = (a: ChatAction) => {
     finishReveals()
-    if (typeof a.id === 'object') navigate(a.id.open)
+    if (typeof a.id === 'object' && 'advance' in a.id) {
+      useDemo.getState().advance(a.id.advance, a.id.from as never, a.id.to as never)
+      navigate(a.id.open)
+    } else if (typeof a.id === 'object') navigate(a.id.open)
     else if (a.id === 'view-benchmark') navigate(contractPath('salesforce', 'benchmark'))
     else if (a.id === 'view-outcome') navigate(contractPath('salesforce', 'outcomes'))
     else if (a.id === 'start-renewal') {
@@ -325,7 +298,7 @@ export function AiLauncher() {
             )}
             {chat.length > 0 && !revealing && (
               <div className="flex flex-wrap gap-1.5 pt-1">
-                {s1Chips().map((c) => (
+                {chips.slice(0, 4).map((c) => (
                   <button
                     key={c.id}
                     onClick={() => send(c.chip)}

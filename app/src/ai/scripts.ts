@@ -3,13 +3,33 @@
  * selectors at send time, so answers always match the screens and the current
  * scenario stage. Scripted demo content, no live model.
  */
+import { aiMonthly, aiPotentialMonthly, AI_COMMITMENTS } from '../data/chapters/aiSpend'
+import { ANA, ANA_REQUEST_ID, anaDerived } from '../data/chapters/ana'
+import { budgetImpact } from '../data/chapters/budgets'
+import { CLOUD, cloudTotals, OPTIMIZATION_TESTS } from '../data/chapters/cloud'
+import { i2pDerived, I2P } from '../data/chapters/i2p'
+import { CONSOLIDATION, consolidationDerived, PROCUREMENT_KPIS } from '../data/chapters/insights'
+import { LIABILITY_REVIEW } from '../data/platform'
 import { S1 } from '../data/scenario'
 import { vendorById, vendors } from '../data/vendors'
+import { flowStep, reached } from '../domain/flows'
 import { noticeDays, s1Summary, scenarioStage, type ScenarioStage } from '../domain/selectors'
 import type { ChatAction, ChatBlock, DemoState } from '../domain/types'
 import { formatDate, formatShortDate, num, pct, usd, usdCompact } from '../lib/format'
 
-export type IntentId = 's1-savings' | 's1-renewals' | 's2-usage' | 's2-overlap'
+export type IntentId =
+  | 's1-savings'
+  | 's1-renewals'
+  | 's2-usage'
+  | 's2-overlap'
+  | 'ana-gong'
+  | 'liability'
+  | 'bottleneck'
+  | 'leverage'
+  | 'consolidate'
+  | 'ai-spend'
+  | 'budget'
+  | 'cloud'
 
 export interface Intent {
   id: IntentId
@@ -171,6 +191,166 @@ function s2Overlap(): ChatBlock[] {
   ]
 }
 
+/* ---------- Full-demo chapter answers ---------- */
+
+const anaPath = `/intelligent-workflows/requests/${ANA_REQUEST_ID}/overview`
+
+function anaGong(s: DemoState): ChatBlock[] {
+  const d = anaDerived()
+  const step = flowStep(s, 'ana')
+  if (step === 'completed')
+    return [
+      { kind: 'text', text: `Ana already secured the Gong renewal: ${num(ANA.targetSeats)} seats at ${usd(ANA.negotiatedPricePerSeat)}, locked for ${ANA.termMonths} months. That’s ${usd(d.annualReduction)} a year (${pct(d.annualReductionPct)}) lower.` },
+      { kind: 'actions', items: [{ id: { open: '/contracts/gong/outcomes' }, label: 'View outcome', primary: true }] },
+    ]
+  return [
+    {
+      kind: 'text',
+      text: `Gong’s notice deadline is ${formatShortDate(ANA.noticeDeadline)}, 3 days away, and the quote adds ${pct(ANA.quoteUpliftPct)}. Only ${num(ANA.activeUsers28d)} of ${num(ANA.currentSeats)} seats were active in 28 days. That’s a good fit for Ana: she can negotiate today within guardrails you approve.`,
+    },
+    {
+      kind: 'metrics',
+      items: [
+        { label: 'Current annual cost', value: usd(d.currentAnnualCost), sub: `${num(ANA.currentSeats)} seats` },
+        { label: 'Vendor quote', value: usd(d.openingQuote), sub: `+${pct(ANA.quoteUpliftPct)} uplift` },
+        { label: 'Benchmark', value: `${usd(ANA.benchmarkBandLow)}–${usd(ANA.benchmarkBandHigh)}`, sub: 'per seat (illustrative)', accent: true },
+      ],
+    },
+    {
+      kind: 'actions',
+      items: [
+        step === 'none'
+          ? { id: { advance: 'ana', from: 'none', to: 'briefing', open: anaPath }, label: 'Negotiate with Ana', primary: true }
+          : { id: { open: anaPath }, label: 'View Ana negotiation', primary: true },
+        { id: { open: '/contracts/gong/overview' }, label: 'Open Gong contract' },
+      ],
+    },
+  ]
+}
+
+function liability(): ChatBlock[] {
+  return [
+    { kind: 'text', text: `I reviewed ${LIABILITY_REVIEW.length} indexed documents. One contract has uncapped exposure for Northwind; the rest are capped.` },
+    {
+      kind: 'table',
+      title: 'Liability Risk Overview',
+      columns: ['Document', 'Clause', 'Finding', 'Risk'],
+      rows: LIABILITY_REVIEW.map((r) => [r.doc, r.clause, r.finding, `${r.risk === 'High' ? '🔴' : r.risk === 'Medium' ? '🟠' : '🟢'} ${r.risk}`]),
+    },
+    { kind: 'text', tone: 'caveat', text: 'Clause extraction is AI-assisted. Legal should confirm before relying on it. LinkDesk is a fictional vendor from the intake demo.' },
+    { kind: 'actions', items: [{ id: { open: '/documents' }, label: 'Open Documents', primary: true }] },
+  ]
+}
+
+function bottleneck(s: DemoState): ChatBlock[] {
+  const k = PROCUREMENT_KPIS
+  if (reached(s, 'bottleneck', 'fixed'))
+    return [
+      { kind: 'text', text: `Since the Jira steps went live, Security Review averages ${k.after.securityReviewDays} days (was ${k.before.securityReviewDays}) and new purchases complete in ${k.after.newPurchaseCycleDays} days (was ${k.before.newPurchaseCycleDays}). No tasks are overdue.` },
+      { kind: 'actions', items: [{ id: { open: '/insights/procurement' }, label: 'View procurement insights', primary: true }] },
+    ]
+  return [
+    {
+      kind: 'text',
+      text: `Bottleneck: the Security Review step is the biggest delay in your SaaS - New Purchase workflow, adding ${k.before.securityReviewDays} days on average. The IT Approval task has no assignee and isn’t connected to your security team’s tooling.`,
+    },
+    {
+      kind: 'text',
+      text: 'Recommendation: you already have an Atlassian contract, so add a Jira integration step. It creates a ticket for the Security & Compliance team and syncs the decision back to Vertice, removing the manual hand-off.',
+    },
+    { kind: 'actions', items: [{ id: { open: '/workflows/edit/new-purchase-advanced?focus=it-approval' }, label: 'Take me to the flow and identify the relevant task', primary: true }] },
+  ]
+}
+
+function leverage(): ChatBlock[] {
+  const top = [...vendors].sort((a, b) => b.annualCost - a.annualCost).slice(0, 6)
+  const lever = (id: string, util: number | null) => {
+    if (id === 'salesforce') return 'Quote +12%, 71% utilized'
+    if (util === null) return 'Usage-based: commit sizing'
+    if (util < 0.7) return 'Low utilization'
+    return 'Term commitment'
+  }
+  return [
+    { kind: 'text', text: 'Your highest-cost vendors, with the lever that gives you the most negotiation leverage at renewal:' },
+    {
+      kind: 'table',
+      columns: ['Vendor', 'Annual', 'Utilization', 'Renews', 'Leverage'],
+      align: ['left', 'right', 'right', 'left', 'left'],
+      rows: top.map((v) => [v.name, usdCompact(v.annualCost), v.utilization === null ? 'Usage-based' : pct(v.utilization), formatShortDate(v.renewalDate), lever(v.id, v.utilization)]),
+    },
+    { kind: 'actions', items: [{ id: { open: '/analytics/saas-stack-matrix' }, label: 'Open SaaS Stack Matrix', primary: true }, { id: { open: '/analytics/recommendations' }, label: 'Recommendations' }] },
+  ]
+}
+
+function consolidate(s: DemoState): ChatBlock[] {
+  const d = consolidationDerived()
+  const reqPath = `/intelligent-workflows/requests/${CONSOLIDATION.requestId}/overview`
+  return [
+    {
+      kind: 'text',
+      text: `Asana (${d.keep.vendor.department}) and monday.com (${d.drop.vendor.department}) do the same job and are both under-used: ${pct(d.keep.utilization)} and ${pct(d.drop.utilization)}. Their ${num(d.combinedActive)} combined active users fit in Asana’s ${num(d.keep.licensed)} licenses.`,
+    },
+    {
+      kind: 'table',
+      columns: ['Keep', 'Eliminate', 'Potential saving', 'Act by'],
+      align: ['left', 'left', 'right', 'left'],
+      rows: [['Asana', 'monday.com', usd(d.annualSaving), `${formatShortDate(d.drop.vendor.noticeDeadline!)} (notice)`]],
+    },
+    { kind: 'text', tone: 'caveat', text: 'Both owners should confirm the migration plan. Savings count only once the monday.com contract ends.' },
+    {
+      kind: 'actions',
+      items: [
+        reached(s, 'consolidation', 'requested')
+          ? { id: { open: reqPath }, label: 'View consolidation request', primary: true }
+          : { id: { advance: 'consolidation', from: 'none', to: 'requested', open: reqPath }, label: 'Create consolidation request', primary: true },
+        { id: { open: '/insights/usage' }, label: 'Open Usage insights' },
+      ],
+    },
+  ]
+}
+
+function aiSpend(): ChatBlock[] {
+  const a = AI_COMMITMENTS[0]
+  return [
+    { kind: 'text', text: `Northwind spends about ${usd(aiMonthly())} a month on AI across Anthropic, OpenAI and Cursor. I found ${usd(aiPotentialMonthly())} a month (${pct(aiPotentialMonthly() / aiMonthly())}) in savings.` },
+    {
+      kind: 'metrics',
+      items: [
+        { label: 'Monthly AI spend', value: usd(aiMonthly()) },
+        { label: 'Potential monthly savings', value: usd(aiPotentialMonthly()), sub: pct(aiPotentialMonthly() / aiMonthly()), accent: true },
+        { label: 'Anthropic commitment used', value: pct(a.used / a.commitment), sub: 'renewal notice Dec 16' },
+      ],
+    },
+    { kind: 'actions', items: [{ id: { open: '/insights/ai-spend' }, label: 'Open AI spend', primary: true }] },
+  ]
+}
+
+function budget(): ChatBlock[] {
+  const amount = i2pDerived().negotiated
+  const b = budgetImpact(I2P.department, amount)
+  return [
+    { kind: 'text', text: `The remote support purchase (${usd(amount)}) uses ${pct(b.share)} of the Support budget. Support would end the fiscal year at ${pct(b.yearEndPct)} of budget, so it stays in budget.` },
+    {
+      kind: 'metrics',
+      items: [
+        { label: 'Support budget', value: usd(b.budget.budget) },
+        { label: 'Free before', value: usd(b.budget.free) },
+        { label: 'Free after', value: usd(b.freeAfter), accent: true },
+      ],
+    },
+    { kind: 'actions', items: [{ id: { open: '/insights/budgets' }, label: 'View budgets', primary: true }] },
+  ]
+}
+
+function cloud(): ChatBlock[] {
+  const t = cloudTotals()
+  return [
+    { kind: 'text', text: `Northwind’s AWS spend is ${usd(CLOUD.annualSpend)} a year. ${OPTIMIZATION_TESTS.run} optimization tests found ${usd(t.savings)} (${pct(t.savingsPct)}) in savings, most of it in compute.` },
+    { kind: 'text', tone: 'caveat', text: `The EDP commitment (${usd(CLOUD.edpCommitment)} a year) ends ${formatDate(CLOUD.edpTermEnd)}. Vertice’s experts can negotiate the renewal.` },
+    { kind: 'actions', items: [{ id: { open: '/cloud/overview' }, label: 'Open Cloud Optimizer', primary: true }, { id: { open: '/cloud/edp' }, label: 'EDP renewal' }] },
+  ]
+}
+
 export const intents: Intent[] = [
   {
     id: 's1-savings',
@@ -196,7 +376,58 @@ export const intents: Intent[] = [
     keywords: [['duplicat', 'overlap', 'redundan', 'consolidat']],
     build: s2Overlap,
   },
+  {
+    id: 'ana-gong',
+    chip: 'Negotiate my Gong renewal and get me the best price',
+    keywords: [['gong'], ['negotiat', 'renew', 'sav', 'price', 'cheaper', 'best', 'cost', 'deal']],
+    build: anaGong,
+  },
+  {
+    id: 'liability',
+    chip: 'Do any contracts mention uncapped liability?',
+    keywords: [['liabilit', 'indemn', 'uncapped']],
+    build: () => liability(),
+  },
+  {
+    id: 'bottleneck',
+    chip: 'What is the main bottleneck in my SaaS - New Purchase request workflow?',
+    keywords: [['bottleneck', 'delay', 'slow', 'stuck', 'cycle time', 'take me to the flow']],
+    build: bottleneck,
+  },
+  {
+    id: 'leverage',
+    chip: 'Show my highest cost vendors where I have most negotiation leverage',
+    keywords: [['leverage', 'highest cost', 'most expensive', 'biggest vendor', 'top vendor', 'biggest spend']],
+    build: () => leverage(),
+  },
+  {
+    id: 'consolidate',
+    chip: 'What could I save by consolidating Asana and monday.com?',
+    keywords: [['asana', 'monday'], ['consolidat', 'sav', 'overlap', 'merge', 'duplicat', 'combine']],
+    build: consolidate,
+  },
+  {
+    id: 'ai-spend',
+    chip: 'Where can we reduce AI spend?',
+    keywords: [['ai spend', 'ai cost', 'token', 'llm', 'ai usage', 'ai tools', 'model cost', 'genai']],
+    build: () => aiSpend(),
+  },
+  {
+    id: 'budget',
+    chip: 'How does the remote support purchase affect the Support budget?',
+    keywords: [['budget']],
+    build: () => budget(),
+  },
+  {
+    id: 'cloud',
+    chip: 'Where can we save on AWS?',
+    keywords: [['aws', 'cloud', 'ec2', 'edp', 'reserved instance']],
+    build: () => cloud(),
+  },
 ]
+
+/** Intents checked before the "other vendor" fallback (they name vendors on purpose). */
+const CHAPTER_INTENTS: IntentId[] = ['ana-gong', 'consolidate', 'liability', 'bottleneck', 'leverage', 'ai-spend', 'budget', 'cloud']
 
 const normalize = (t: string) =>
   t
@@ -221,9 +452,11 @@ export function matchPrompt(raw: string): Match {
   const hit = (i: Intent) => i.keywords.every((group) => group.some((k) => t.includes(k)))
   const s1 = intents.find((i) => i.id === 's1-savings')!
   if (hit(s1) && !other) return { kind: 'intent', intent: s1 }
+  const chapter = intents.filter((i) => CHAPTER_INTENTS.includes(i.id)).find(hit)
+  if (chapter) return { kind: 'intent', intent: chapter }
   if (other && ['sav', 'renew', 'price', 'negotiat', 'cost', 'cheaper', 'discount', 'benchmark'].some((k) => t.includes(k)))
     return { kind: 'other-vendor', vendorName: other.name }
-  const found = intents.filter((i) => i.id !== 's1-savings').find(hit)
+  const found = intents.filter((i) => i.id !== 's1-savings' && !CHAPTER_INTENTS.includes(i.id)).find(hit)
   return found ? { kind: 'intent', intent: found } : { kind: 'unknown' }
 }
 
@@ -231,10 +464,30 @@ export const fallbackBlocks = (vendorName?: string): ChatBlock[] => [
   {
     kind: 'text',
     text: vendorName
-      ? `This demo covers the Salesforce renewal, so I can’t analyse ${vendorName} here. Try one of these questions.`
-      : 'This demo covers the Salesforce renewal. Try one of these questions.',
+      ? `I don’t have a scripted analysis for ${vendorName} in this demo. I can help with the Salesforce and Gong renewals, usage, AI and cloud spend, bottlenecks and contract terms.`
+      : 'I can help with renewals (Salesforce, Gong with Ana), usage and overlap, AI and cloud spend, workflow bottlenecks and contract terms. Try one of these questions.',
   },
 ]
 
 export const s1Chips = () => intents.filter((i) => i.id.startsWith('s1'))
 export const s2Chips = () => intents.filter((i) => i.id.startsWith('s2'))
+
+const byIds = (ids: IntentId[]) => ids.map((id) => intents.find((i) => i.id === id)!)
+
+/** Suggestion chips for the current page: S1 first, then what fits the screen. */
+export const chipsFor = (pathname: string): Intent[] => {
+  const extra: IntentId[] = pathname.startsWith('/contracts/gong')
+    ? ['ana-gong']
+    : pathname.startsWith('/insights/procurement') || pathname.startsWith('/workflows')
+      ? ['bottleneck']
+      : pathname.startsWith('/analytics') || pathname.startsWith('/insights/usage')
+        ? ['leverage', 'consolidate', 's2-usage']
+        : pathname.startsWith('/documents') || pathname.startsWith('/contracts')
+          ? ['liability']
+          : pathname.startsWith('/insights/ai-spend') || pathname.startsWith('/cloud')
+            ? ['ai-spend', 'cloud']
+            : pathname.startsWith('/insights/budgets') || pathname.includes('req-remote-support')
+              ? ['budget']
+              : ['s2-usage', 'ana-gong', 'bottleneck']
+  return [...s1Chips(), ...byIds(extra)]
+}

@@ -50,6 +50,8 @@ export type ChatActionId =
   | 'view-renewal'
   | 'view-outcome'
   | { open: string }
+  /** Advance a full-demo flow (guarded), then navigate. */
+  | { advance: FlowId; from: string; to: string; open: string }
 
 export interface ChatAction {
   id: ChatActionId
@@ -70,6 +72,26 @@ export interface ChatMessage {
   prompt?: string
 }
 
+/**
+ * Full-demo chapters beyond S1 (roadmap/FULL-DEMO-PLAN.md). Each flow is a
+ * linear list of steps (domain/flows.ts); the state stores the current step id.
+ * Outcomes (savings, contracts, POs, tasks) are derived from these steps, never
+ * stored twice.
+ */
+export type FlowId =
+  | 'ana'
+  | 'i2p'
+  | 'i2p-security'
+  | 'i2p-legal'
+  | 'rfp'
+  | 'p2p-zscaler'
+  | 'p2p-teamviewer'
+  | 'bottleneck'
+  | 'consolidation'
+  | 'ai-commit'
+  | 'cloud-edp'
+  | 'contract-upload'
+
 export interface DemoState {
   request: RenewalRequest | null
   /** Requirements form draft (kept while the modal is closed). */
@@ -77,4 +99,8 @@ export interface DemoState {
   futureTerms: FutureTerm[]
   savingsEntries: SavingsRecord[]
   chat: ChatMessage[]
+  /** Current step per full-demo flow; a missing flow is at its first step. */
+  flows: Partial<Record<FlowId, string>>
+  /** Expert Engage services booked in this session (service ids). */
+  bookings: string[]
 }

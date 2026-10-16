@@ -13,9 +13,12 @@ import { Tip } from '../components/ui/Overlay'
 import { StatusPill } from '../components/ui/StatusPill'
 import { VendorLogo } from '../components/ui/VendorLogo'
 import { SAVINGS_PERIOD_LABEL } from '../data/savingsHistory'
-import { liveContractCount, portfolioTotal, savingsSummary, spendByDepartment } from '../domain/selectors'
+import { Logo } from '../components/ui/kit'
+import { recommendations } from '../data/chapters/insights'
+import { newContracts, requestRows } from '../domain/chapters'
+import { allFutureTerms, liveContractCount, portfolioTotal, savingsSummary, spendByDepartment } from '../domain/selectors'
 import { myOpenTasks, taskVendor } from '../domain/tasks'
-import { pct, usd } from '../lib/format'
+import { formatDate, pct, usd } from '../lib/format'
 import { useScenario } from '../store/demo'
 
 function SavingsHero({ justAdded }: { justAdded: number | null }) {
@@ -123,12 +126,85 @@ function TasksCard() {
   )
 }
 
+function RequestsCard() {
+  const state = useScenario()
+  const rows = useMemo(() => requestRows(state).filter((r) => r.status === 'In progress').slice(0, 5), [state])
+  return (
+    <Card>
+      <div className="flex items-center justify-between px-5 pt-4 pb-2">
+        <h3 className="text-[15px] font-semibold text-ink">Requests</h3>
+        <Link to="/intelligent-workflows/requests" className="flex items-center gap-1 text-[13px] font-medium text-ink-2 hover:text-primary">
+          All requests <ChevronRight className="size-3.5" />
+        </Link>
+      </div>
+      <table className="w-full text-[13px]">
+        <thead className="text-left text-[11.5px] tracking-wide text-ink-3 uppercase">
+          <tr className="border-b border-line">
+            <th className="px-5 py-2 font-medium">Request</th>
+            <th className="px-3 py-2 text-right font-medium">Cost</th>
+            <th className="px-3 py-2 font-medium">Active task</th>
+            <th className="px-5 py-2 font-medium">Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.id} className="border-b border-line-soft last:border-0 hover:bg-primary-wash">
+              <td className="px-5 py-2.5">
+                <Link to={r.to} className="flex items-center gap-2.5">
+                  <Logo id={r.logoId} size="xs" />
+                  <span className="min-w-0">
+                    <span className="block truncate font-medium text-ink">{r.title}</span>
+                    <span className="block text-[11.5px] text-ink-3">{r.type}</span>
+                  </span>
+                </Link>
+              </td>
+              <td className="px-3 py-2.5 text-right text-ink tabular-nums">{usd(r.cost)}</td>
+              <td className="px-3 py-2.5 text-ink-2">{r.activeTask}</td>
+              <td className="px-5 py-2.5 text-ink-3">
+                {formatDate(r.date)}
+                <span className="block text-[11px]">{r.dateCaption}</span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Card>
+  )
+}
+
+function OpportunityCard() {
+  const rec = useMemo(() => recommendations(), [])
+  return (
+    <Card className="flex flex-col p-5">
+      <div className="text-[13.5px] text-ink-3">Savings opportunity</div>
+      <div className="mt-1 text-[28px] font-semibold tracking-[-0.02em] text-ink tabular-nums">{usd(rec.totals.all)}</div>
+      <p className="text-[12px] text-ink-3">Estimated annual savings across the portfolio</p>
+      <ul className="mt-4 space-y-2 text-[13px]">
+        {[
+          ['Deduplication', rec.totals.dedupe],
+          ['Term commitment', rec.totals.term],
+          ['Right-sizing', rec.totals.rightsize],
+        ].map(([k, v]) => (
+          <li key={k} className="flex justify-between">
+            <span className="text-ink-2">{k}</span>
+            <span className="font-medium text-ink tabular-nums">{usd(v as number)}</span>
+          </li>
+        ))}
+      </ul>
+      <Link to="/analytics/recommendations" className="mt-auto flex items-center gap-1 pt-4 text-[13px] font-medium text-primary hover:underline">
+        View recommendations <ChevronRight className="size-3.5" />
+      </Link>
+    </Card>
+  )
+}
+
 export function Dashboard() {
   const state = useScenario()
   const [chooser, setChooser] = useState(false)
   const location = useLocation()
   const justAdded = (location.state as { savingsAdded?: number } | null)?.savingsAdded ?? null
-  const signedLater = state.futureTerms.length
+  const signedLater = allFutureTerms(state).length
+  const notLive = newContracts(state).length
 
   return (
     <>
@@ -148,9 +224,9 @@ export function Dashboard() {
                 <div className="mt-1 text-[28px] font-semibold tracking-[-0.02em] text-ink tabular-nums">{liveContractCount()}</div>
               </div>
               <div className="mt-4 space-y-1.5 text-[13px]">
-                <div className="flex justify-between text-ink-3">
+                <div className={clsx('flex justify-between', notLive ? 'font-medium text-ink' : 'text-ink-3')}>
                   <span>Not yet live</span>
-                  <span className="tabular-nums">0</span>
+                  <span className="tabular-nums">{notLive}</span>
                 </div>
                 <div className={clsx('flex justify-between', signedLater ? 'font-medium text-success-ink' : 'text-ink-3')}>
                   <span>Signed renewals starting later</span>
@@ -163,6 +239,10 @@ export function Dashboard() {
           <TasksCard />
         </div>
         <Pipeline state={state} />
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1fr_340px]">
+          <RequestsCard />
+          <OpportunityCard />
+        </div>
       </PageBody>
       <NewRequestChooser open={chooser} onOpenChange={setChooser} />
     </>

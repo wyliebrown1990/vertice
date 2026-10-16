@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { S1, S1_REQUEST_ID } from '../../data/scenario'
 import { vendorById } from '../../data/vendors'
 import { daysFromToday } from '../../lib/format'
+import { flowStep } from '../../domain/flows'
 import { useDemo } from '../../store/demo'
 import { VendorLogo } from '../ui/VendorLogo'
 
@@ -11,6 +12,9 @@ export function NotificationBell() {
   const navigate = useNavigate()
   const request = useDemo((s) => s.request)
   const sfDays = daysFromToday(S1.noticeDeadline)
+  const ana = useDemo((s) => flowStep(s, 'ana'))
+  const zscaler = useDemo((s) => flowStep(s, 'p2p-zscaler'))
+  const aiCommit = useDemo((s) => flowStep(s, 'ai-commit'))
 
   const items = [
     {
@@ -19,18 +23,19 @@ export function NotificationBell() {
       body: 'Auto-renews Nov 15 unless notice is given by Oct 16.',
       to: '/contracts/zoominfo/overview',
     },
-    {
-      vendorId: 'gong',
-      title: 'Gong notice deadline in 3 days',
-      body: '52% of seats active in the last 28 days.',
-      to: '/contracts/gong/overview',
-    },
+    ana === 'none'
+      ? { vendorId: 'gong', title: 'Gong notice deadline in 3 days', body: '52% of seats active in the last 28 days. Ana can negotiate it.', to: '/contracts/gong/overview' }
+      : { vendorId: 'gong', title: ana === 'completed' ? 'Gong renewal secured by Ana' : 'Ana is negotiating Gong', body: ana === 'completed' ? '$50,000 a year lower, 2-year price lock.' : 'Open the negotiation.', to: '/intelligent-workflows/requests/req-gong-ana-renewal/overview' },
     {
       vendorId: 'salesforce',
       title: request ? 'Salesforce renewal in progress' : `Salesforce notice deadline in ${sfDays} days`,
       body: request ? 'Open the renewal request.' : 'Largest renewal this quarter: $980,000 a year, quote received.',
       to: request ? `/intelligent-workflows/requests/${S1_REQUEST_ID}/overview` : '/contracts/salesforce/overview',
     },
+    ...(zscaler === 'needs-review'
+      ? [{ vendorId: 'zscaler', title: 'Invoice exceeds contract by $90,000', body: 'INV-ZS-24118 bills the pre-renewal price.', to: '/invoices/INV-ZS-24118' }]
+      : []),
+    ...(aiCommit === 'none' ? [{ vendorId: 'anthropic', title: 'Anthropic commitment 85% used', body: 'Overage pricing from ~Dec 10. Renewal notice Dec 16.', to: '/insights/ai-spend?tab=commitments' }] : []),
   ]
 
   return (

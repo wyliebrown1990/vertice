@@ -11,9 +11,9 @@ import { personById } from '../../data/people'
 import { savingsHistory } from '../../data/savingsHistory'
 import { S1 } from '../../data/scenario'
 import type { Vendor } from '../../data/vendors'
-import { noticeDays, noticeUrgency, s1Summary } from '../../domain/selectors'
+import { allFutureTerms, noticeDays, noticeUrgency, s1Summary } from '../../domain/selectors'
 import { daysFromToday, formatDate, num, pct, relativeDays, usd } from '../../lib/format'
-import { useDemo } from '../../store/demo'
+import { useDemo, useScenario } from '../../store/demo'
 import { useUi } from '../../store/ui'
 import { RenewalAction } from '../../components/renewal/RenewalAction'
 import { requestPath } from '../../lib/routes'
@@ -48,7 +48,8 @@ function Lifecycle({ vendor }: { vendor: Vendor }) {
   const nd = noticeDays(vendor)
   const urgency = noticeUrgency(vendor)
   const termDays = daysFromToday(vendor.renewalDate)
-  const future = useDemo((s) => s.futureTerms.find((t) => t.vendorId === vendor.id))
+  const scenario = useScenario()
+  const future = allFutureTerms(scenario).find((t) => t.vendorId === vendor.id)
   return (
     <Card>
       <CardHeader title="Lifecycle" />
@@ -160,13 +161,23 @@ function GenericSummary({ vendor }: { vendor: Vendor }) {
       </p>
       <div className="mt-4 flex items-start gap-2 rounded-lg bg-canvas px-3 py-2.5 text-[12.5px] text-ink-3">
         <Info className="mt-px size-3.5 shrink-0" />
-        <span>
-          Read-only contract. This demo’s interactive renewal is{' '}
-          <Link to="/contracts/salesforce/overview" className="font-medium text-primary hover:underline">
-            Salesforce
-          </Link>
-          .
-        </span>
+        {vendor.id === 'gong' ? (
+          <span>
+            A mid-size renewal 3 days from its notice deadline: a good fit for <b className="text-ink">Ana</b>, Vertice’s AI negotiation agent. Use “Negotiate with Ana” above.
+          </span>
+        ) : (
+          <span>
+            Strategic renewals like{' '}
+            <Link to="/contracts/salesforce/overview" className="font-medium text-primary hover:underline">
+              Salesforce
+            </Link>{' '}
+            go to Vertice’s expert buyers; long-tail renewals like{' '}
+            <Link to="/contracts/gong/overview" className="font-medium text-primary hover:underline">
+              Gong
+            </Link>{' '}
+            can go to Ana.
+          </span>
+        )}
       </div>
     </div>
   )

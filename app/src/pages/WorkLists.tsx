@@ -1,122 +1,157 @@
-import { ArrowRight, Info } from 'lucide-react'
-import { useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { ArrowRight, Plus } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { NewRequestChooser } from '../components/dashboard/NewRequestChooser'
 import { PageBody, PageHeader } from '../components/layout/PageHeader'
-import { RenewalAction } from '../components/renewal/RenewalAction'
+import { VerticeMark } from '../components/ui/Avatar'
+import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
+import { Logo, Segmented, Table, Td, THead, Tr } from '../components/ui/kit'
 import { StatusPill } from '../components/ui/StatusPill'
-import { VendorLogo } from '../components/ui/VendorLogo'
-import { S1 } from '../data/scenario'
-import { vendorById } from '../data/vendors'
-import { STAGE_LABEL } from '../domain/selectors'
-import { allTasks, taskVendor } from '../domain/tasks'
+import { requestRows } from '../domain/chapters'
+import { allTasks } from '../domain/tasks'
 import { formatDate, usd } from '../lib/format'
-import { requestPath } from '../lib/routes'
-import { useDemo, useScenario } from '../store/demo'
+import { useScenario } from '../store/demo'
 
-const ScopeNote = ({ children }: { children: React.ReactNode }) => (
-  <div className="mt-4 flex items-start gap-2 text-[12.5px] text-ink-3">
-    <Info className="mt-px size-3.5 shrink-0" />
-    <span>{children}</span>
-  </div>
-)
+type ReqFilter = 'all' | 'progress' | 'completed'
 
-/** Requests: this demo has exactly one request, the Salesforce renewal. */
+/** Requests: every chapter request in flight plus read-only history. */
 export function RequestsList() {
-  const request = useDemo((s) => s.request)
-  const sf = vendorById(S1.vendorId)!
+  const state = useScenario()
+  const rows = useMemo(() => requestRows(state), [state])
+  const [filter, setFilter] = useState<ReqFilter>('all')
+  const [mine, setMine] = useState(false)
+  const [chooser, setChooser] = useState(false)
+  const navigate = useNavigate()
+  const shown = rows.filter(
+    (r) =>
+      (filter === 'all' || (filter === 'progress' ? r.status === 'In progress' : r.status === 'Completed')) &&
+      (!mine || r.assignee.includes('Alex Morgan')),
+  )
   return (
     <>
-      <PageHeader title="Requests" meta={<span>Intake-to-procure requests for Northwind Systems</span>} />
+      <PageHeader
+        title="Requests"
+        meta={<span>Intake-to-procure requests for Northwind Systems</span>}
+        actions={
+          <Button onClick={() => setChooser(true)}>
+            <Plus className="size-4" /> New request
+          </Button>
+        }
+      />
       <PageBody>
+        <div className="mb-3 flex flex-wrap items-center gap-3">
+          <Segmented<ReqFilter>
+            value={filter}
+            onChange={setFilter}
+            options={[
+              { value: 'all', label: 'All', count: rows.length },
+              { value: 'progress', label: 'In progress', count: rows.filter((r) => r.status === 'In progress').length },
+              { value: 'completed', label: 'Completed', count: rows.filter((r) => r.status === 'Completed').length },
+            ]}
+          />
+          <label className="ml-auto flex items-center gap-2 text-[13px] text-ink-2">
+            <input type="checkbox" checked={mine} onChange={(e) => setMine(e.target.checked)} className="size-4 accent-[var(--color-primary)]" />
+            My requests only
+          </label>
+        </div>
         <Card>
-          {request ? (
-            <table className="w-full text-[13.5px]">
-              <thead className="border-b border-line bg-canvas/60 text-left text-[12px] tracking-wide text-ink-3 uppercase">
-                <tr>
-                  <th className="px-4 py-2.5 font-medium">Request</th>
-                  <th className="px-4 py-2.5 text-right font-medium">Cost</th>
-                  <th className="px-4 py-2.5 font-medium">Active task</th>
-                  <th className="px-4 py-2.5 font-medium">Created</th>
-                  <th className="px-4 py-2.5 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="hover:bg-primary-wash">
-                  <td className="px-4 py-3">
-                    <Link to={requestPath} className="flex items-center gap-3">
-                      <VendorLogo vendor={sf} size="sm" />
-                      <span>
-                        <span className="block font-medium text-ink">Salesforce renewal</span>
-                        <span className="block text-[12px] text-ink-3">SaaS · Contract renewal</span>
+          <Table>
+            <THead cols={['Request', { label: 'Cost', right: true }, 'Active task', 'Assignees', 'Date', 'Status']} />
+            <tbody>
+              {shown.map((r) => (
+                <Tr key={r.id} onClick={() => navigate(r.to)}>
+                  <Td>
+                    <Link to={r.to} className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+                      <Logo id={r.logoId} size="sm" />
+                      <span className="min-w-0">
+                        <span className="block font-medium text-ink">{r.title}</span>
+                        <span className="block text-[12px] text-ink-3">{r.type}</span>
                       </span>
                     </Link>
-                  </td>
-                  <td className="px-4 py-3 text-right tabular-nums">{usd(S1.currentAnnualCost)}</td>
-                  <td className="px-4 py-3 text-ink-2">{STAGE_LABEL[request.stage]}</td>
-                  <td className="px-4 py-3 text-ink-2">{formatDate(request.createdOn)}</td>
-                  <td className="px-4 py-3">
-                    <StatusPill tone={request.stage === 'completed' ? 'success' : 'info'}>{request.stage === 'completed' ? 'Completed' : 'In progress'}</StatusPill>
-                  </td>
+                  </Td>
+                  <Td right>
+                    <span className="block text-ink">{usd(r.cost)}</span>
+                    <span className="block text-[11.5px] text-ink-3">{r.costCaption}</span>
+                  </Td>
+                  <Td>
+                    <span className="flex items-center gap-1.5 text-ink-2">
+                      {r.verticeLed && <VerticeMark className="size-4" />}
+                      {r.activeTask}
+                    </span>
+                  </Td>
+                  <Td className="text-ink-2">{r.assignee}</Td>
+                  <Td>
+                    <span className="block text-ink-2">{formatDate(r.date)}</span>
+                    <span className="block text-[11.5px] text-ink-3">{r.dateCaption}</span>
+                  </Td>
+                  <Td>
+                    <StatusPill tone={r.status === 'Completed' ? 'success' : 'info'}>{r.status}</StatusPill>
+                  </Td>
+                </Tr>
+              ))}
+              {shown.length === 0 && (
+                <tr>
+                  <Td colSpan={6} className="py-10 text-center text-ink-3">
+                    No requests match this filter.
+                  </Td>
                 </tr>
-              </tbody>
-            </table>
-          ) : (
-            <div className="flex flex-col items-center gap-3 px-6 py-14 text-center">
-              <p className="text-[14px] text-ink-2">No requests in progress.</p>
-              <p className="text-[13px] text-ink-3">Salesforce is the largest upcoming renewal: notice deadline {formatDate(S1.noticeDeadline)}.</p>
-              <RenewalAction size="sm" />
-            </div>
-          )}
+              )}
+            </tbody>
+          </Table>
         </Card>
-        <ScopeNote>This demo covers one request, the Salesforce renewal. New purchases and sourcing are part of the full platform.</ScopeNote>
       </PageBody>
+      <NewRequestChooser open={chooser} onOpenChange={setChooser} />
     </>
   )
 }
 
+type TaskFilter = 'all' | 'mine'
+
 export function TasksList() {
   const state = useScenario()
   const tasks = useMemo(() => allTasks(state), [state])
+  const [filter, setFilter] = useState<TaskFilter>('all')
+  const shown = filter === 'mine' ? tasks.filter((t) => t.mine) : tasks
   return (
     <>
       <PageHeader title="Tasks" meta={<span>Open work across renewals and requests</span>} />
       <PageBody>
+        <Segmented<TaskFilter>
+          className="mb-3"
+          value={filter}
+          onChange={setFilter}
+          options={[
+            { value: 'all', label: 'All', count: tasks.length },
+            { value: 'mine', label: 'My tasks', count: tasks.filter((t) => t.mine).length },
+          ]}
+        />
         <Card>
-          <table className="w-full text-[13.5px]">
-            <thead className="border-b border-line bg-canvas/60 text-left text-[12px] tracking-wide text-ink-3 uppercase">
-              <tr>
-                <th className="px-4 py-2.5 font-medium">Task</th>
-                <th className="px-4 py-2.5 font-medium">Status</th>
-                <th className="px-4 py-2.5 font-medium">Assignee</th>
-                <th className="px-4 py-2.5 font-medium">Context</th>
-                <th className="px-4 py-2.5" />
-              </tr>
-            </thead>
+          <Table>
+            <THead cols={['Task', 'Status', 'Assignees', 'Request', '']} />
             <tbody>
-              {tasks.map((t) => (
-                <tr key={t.id} className="border-b border-line-soft last:border-0 hover:bg-primary-wash">
-                  <td className="px-4 py-3 font-medium text-ink">{t.title}</td>
-                  <td className="px-4 py-3">
+              {shown.map((t) => (
+                <Tr key={t.id}>
+                  <Td className="font-medium text-ink">{t.title}</Td>
+                  <Td>
                     <StatusPill tone={t.dueTone === 'danger' ? 'danger' : t.dueTone === 'warning' ? 'warning' : 'info'}>{t.due}</StatusPill>
-                  </td>
-                  <td className="px-4 py-3 text-ink-2">{t.assignee}</td>
-                  <td className="px-4 py-3">
+                  </Td>
+                  <Td className="text-ink-2">{t.assignee}</Td>
+                  <Td>
                     <span className="flex items-center gap-2 text-ink-2">
-                      <VendorLogo vendor={taskVendor(t)} size="xs" /> {t.context}
+                      <Logo id={t.vendorId} size="xs" /> {t.context}
                     </span>
-                  </td>
-                  <td className="px-4 py-3 text-right">
+                  </Td>
+                  <Td right>
                     <Link to={t.to} className="inline-flex items-center gap-1 text-[13px] font-medium text-primary hover:underline">
                       Open <ArrowRight className="size-3.5" />
                     </Link>
-                  </td>
-                </tr>
+                  </Td>
+                </Tr>
               ))}
             </tbody>
-          </table>
+          </Table>
         </Card>
-        <ScopeNote>ZoomInfo and Gong open read-only contracts. The interactive workflow in this demo is the Salesforce renewal.</ScopeNote>
       </PageBody>
     </>
   )

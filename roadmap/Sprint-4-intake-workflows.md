@@ -4,6 +4,8 @@
 > Mark checkboxes `[x]` when done. Do NOT create separate status docs.
 > Last updated: 2026-10-13 by Codex — deferred-scope notice only
 
+> **SUPERSEDED 2026-10-15 (built):** this scope was delivered by [FULL-DEMO-PLAN.md](FULL-DEMO-PLAN.md), Sprint 10 (Chapter B). See those sprint docs for what was built; the tasks below are historical.
+
 > **DEFERRED — outside the current demo.** Do not execute these tasks or use their acceptance criteria to gate Sprints 0–3 or Sprint 7. Revalidate examples, data and dependencies if this sprint is later activated; PLAN.md governs the current release.
 
 ## Overview

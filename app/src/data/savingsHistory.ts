@@ -13,7 +13,8 @@ export interface SavingsRecord {
   baselineAnnual: number
   /** Contracted annualized reduction. */
   annualReduction: number
-  source: 'history' | 's1'
+  /** history = seeded; s1 = Salesforce renewal; ana = Gong renewal negotiated by Ana. */
+  source: 'history' | 's1' | 'ana'
 }
 
 export const savingsHistory: SavingsRecord[] = [

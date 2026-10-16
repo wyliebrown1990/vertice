@@ -100,8 +100,8 @@ export const notes: Record<Beat, Note> = {
     transition: 'Go straight into requirements; don’t dwell on the chatbot.',
   },
   other: {
-    headline: 'Outside the S1 path. Bridge verbally, then return to the renewal.',
-    evidence: 'Platform breadth: intake-to-procure workflows, usage insights, vendor risk, procure-to-pay. 60–90 seconds, no screen tour.',
-    transition: 'Return to the renewal or the dashboard.',
+    headline: 'Interview cut: bridge verbally and return to the renewal. Full tour: use Chapters.',
+    evidence: 'Platform breadth: intake-to-procure, Ana, sourcing, procure-to-pay, insights, workflows, AI and cloud cost. In the 6-minute cut keep it to 60–90 seconds.',
+    transition: 'Return to the renewal, or open Presenter › Chapters for the full tour.',
   },
 }
